@@ -5,6 +5,7 @@ import ErrorState from '../components/ErrorState';
 import EmptyState from '../components/EmptyState';
 import RestaurantCard from '../components/RestaurantCard';
 import FoodCard from '../components/FoodCard';
+import banner from '../assets/banner-whopper.jpg';
 
 export default function Home() {
   const [restaurants, setRestaurants] = useState([]);
@@ -26,7 +27,7 @@ export default function Home() {
     <div className="container-fluid">
       {/* Banner principal */}
       <div className="banner-container">
-        <div className="banner-bg"></div>
+        <div className="banner-bg" style={{ backgroundImage: `url(${banner})` }} />
       </div>
       <div className="container">
         <div className="row">

@@ -1,6 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import logo from '../assets/logo.png';
 
 function Header() {
   const [q, setQ] = useState('');
@@ -23,11 +24,7 @@ function Header() {
           {/* Logo */}
           <h1 className="navbar-brand text-white m-0">
             <Link className="nav-link text-white mx-3" to="/">
-              <img
-                src="/golang-pet.png"
-                alt="Logo"
-                style={{ height: '40px', width: '40px' }}
-              />{' '}
+              <img src={logo} alt="Logo DeliveryGo" style={{ height: "40px", marginRight: "8px" }} />
               DeliveryGo
             </Link>
           </h1>
