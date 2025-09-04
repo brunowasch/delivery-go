@@ -18,7 +18,7 @@ Lista das APIs consumidas neste trabalho:
 - [Restaurantes](https://apifakedelivery.vercel.app/restaurants)
 - [Detalhes do restaurante](https://apifakedelivery.vercel.app/restaurants/1)
 - [Comidas](https://apifakedelivery.vercel.app/foods)
-- [Detalhes das comidas](https://apifakedelivery.vercel.app/foods/1)
+- [Detalhes da comida](https://apifakedelivery.vercel.app/foods/1)
 
 ## 🛠️ Tecnologias & Ferramentas
 <h3>⚡ Front-end</h3>
