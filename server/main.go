@@ -3,178 +3,98 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
+	"time"
 )
 
 type User struct {
-	ID   string `json:"id"` // Mudando para string
+	ID   string `json:"id"`
 	Name string `json:"name"`
-	// Adicione outros campos conforme necessário
 }
 
 type Restaurant struct {
-	ID   string `json:"id"` // Mudando para string
+	ID   string `json:"id"`
 	Name string `json:"name"`
-	// Adicione outros campos conforme necessário
 }
 
 type Food struct {
-	ID   string `json:"id"` // Mudando para string
+	ID   string `json:"id"`
 	Name string `json:"name"`
-	// Adicione outros campos conforme necessário
 }
 
-func getUsers() {
-	resp, err := http.Get("https://apifakedelivery.vercel.app/users")
+var httpClient = &http.Client{
+	Timeout: 10 * time.Second,
+}
+
+func fetchJSON[T any](url string, out *T) error {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		log.Fatalf("Erro ao fazer a requisição: %v", err)
+		return fmt.Errorf("criando request: %w", err)
+	}
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("fazendo request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("Erro ao ler o corpo da resposta: %v", err)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("status %d ao acessar %s: %s", resp.StatusCode, url, string(body))
 	}
 
+	dec := json.NewDecoder(resp.Body)
+	if err := dec.Decode(out); err != nil {
+		return fmt.Errorf("decodificando JSON de %s: %w", url, err)
+	}
+	return nil
+}
+
+func listUsers() ([]User, error) {
 	var users []User
-	if err := json.Unmarshal(body, &users); err != nil {
-		log.Fatalf("Erro ao fazer o unmarshal dos dados: %v", err)
-	}
-
-	// Exibindo os usuários
-	for _, user := range users {
-		fmt.Printf("ID: %s, Name: %s\n", user.ID, user.Name)
-	}
+	err := fetchJSON("https://apifakedelivery.vercel.app/users", &users)
+	return users, err
 }
 
-func getUser(id int) {
-	resp, err := http.Get(fmt.Sprintf("https://apifakedelivery.vercel.app/users/%d", id))
-	if err != nil {
-		log.Fatalf("Erro ao fazer a requisição: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("Erro ao ler o corpo da resposta: %v", err)
-	}
-
-	var user User
-	if err := json.Unmarshal(body, &user); err != nil {
-		log.Fatalf("Erro ao fazer o unmarshal dos dados: %v", err)
-	}
-
-	// Exibindo o usuário
-	fmt.Printf("ID: %s, Name: %s\n", user.ID, user.Name)
-}
-
-func getRestaurants() {
-	resp, err := http.Get("https://apifakedelivery.vercel.app/restaurants")
-	if err != nil {
-		log.Fatalf("Erro ao fazer a requisição: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("Erro ao ler o corpo da resposta: %v", err)
-	}
-
+func listRestaurants() ([]Restaurant, error) {
 	var restaurants []Restaurant
-	if err := json.Unmarshal(body, &restaurants); err != nil {
-		log.Fatalf("Erro ao fazer o unmarshal dos dados: %v", err)
-	}
-
-	// Exibindo os restaurantes
-	for _, restaurant := range restaurants {
-		fmt.Printf("ID: %s, Name: %s\n", restaurant.ID, restaurant.Name)
-	}
+	err := fetchJSON("https://apifakedelivery.vercel.app/restaurants", &restaurants)
+	return restaurants, err
 }
 
-func getRestaurant(id int) {
-	resp, err := http.Get(fmt.Sprintf("https://apifakedelivery.vercel.app/restaurants/%d", id))
-	if err != nil {
-		log.Fatalf("Erro ao fazer a requisição: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("Erro ao ler o corpo da resposta: %v", err)
-	}
-
-	var restaurant Restaurant
-	if err := json.Unmarshal(body, &restaurant); err != nil {
-		log.Fatalf("Erro ao fazer o unmarshal dos dados: %v", err)
-	}
-
-	// Exibindo o restaurante
-	fmt.Printf("ID: %s, Name: %s\n", restaurant.ID, restaurant.Name)
-}
-
-func getFoods() {
-	resp, err := http.Get("https://apifakedelivery.vercel.app/foods")
-	if err != nil {
-		log.Fatalf("Erro ao fazer a requisição: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("Erro ao ler o corpo da resposta: %v", err)
-	}
-
+func listFoods() ([]Food, error) {
 	var foods []Food
-	if err := json.Unmarshal(body, &foods); err != nil {
-		log.Fatalf("Erro ao fazer o unmarshal dos dados: %v", err)
-	}
-
-	// Exibindo os alimentos
-	for _, food := range foods {
-		fmt.Printf("ID: %s, Name: %s\n", food.ID, food.Name)
-	}
-}
-
-func getFood(id int) {
-	resp, err := http.Get(fmt.Sprintf("https://apifakedelivery.vercel.app/foods/%d", id))
-	if err != nil {
-		log.Fatalf("Erro ao fazer a requisição: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("Erro ao ler o corpo da resposta: %v", err)
-	}
-
-	var food Food
-	if err := json.Unmarshal(body, &food); err != nil {
-		log.Fatalf("Erro ao fazer o unmarshal dos dados: %v", err)
-	}
-
-	// Exibindo o alimento
-	fmt.Printf("ID: %s, Name: %s\n", food.ID, food.Name)
+	err := fetchJSON("https://apifakedelivery.vercel.app/foods", &foods)
+	return foods, err
 }
 
 func main() {
-	// Exemplos de chamadas para as funções
-	fmt.Println("Buscando todos os usuários:")
-	getUsers()
+	users, err := listUsers()
+	if err != nil {
+		log.Fatalf("Erro ao listar usuários: %v", err)
+	}
+	fmt.Println("Usuários:")
+	for _, u := range users {
+		fmt.Printf("  ID: %s, Name: %s\n", u.ID, u.Name)
+	}
 
-	fmt.Println("\nBuscando um usuário específico (ID 1):")
-	getUser(1)
+	restaurants, err := listRestaurants()
+	if err != nil {
+		log.Fatalf("Erro ao listar restaurantes: %v", err)
+	}
+	fmt.Println("\nRestaurantes:")
+	for _, r := range restaurants {
+		fmt.Printf("  ID: %s, Name: %s\n", r.ID, r.Name)
+	}
 
-	fmt.Println("\nBuscando todos os restaurantes:")
-	getRestaurants()
-
-	fmt.Println("\nBuscando um restaurante específico (ID 1):")
-	getRestaurant(1)
-
-	fmt.Println("\nBuscando todos os alimentos:")
-	getFoods()
-
-	fmt.Println("\nBuscando um alimento específico (ID 1):")
-	getFood(1)
+	foods, err := listFoods()
+	if err != nil {
+		log.Fatalf("Erro ao listar comidas: %v", err)
+	}
+	fmt.Println("\nComidas:")
+	for _, f := range foods {
+		fmt.Printf("  ID: %s, Name: %s\n", f.ID, f.Name)
+	}
 }
