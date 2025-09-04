@@ -55,6 +55,44 @@ export default function FoodDetail() {
     e.currentTarget.src = 'https://images.unsplash.com/photo-1601924582971-c6f9fadd6f59?q=80&w=1200&auto=format&fit=crop'
   }
 
+  const renderComments = () => {
+    if (name.toLowerCase().includes("xis")) {
+      return (
+        <>
+          <h4 className="mt-4">Comentários</h4>
+          <div className="border rounded p-3 mb-2">
+            <strong>Gabriel Souza</strong>
+            <p>⭐ ⭐ ⭐ ⭐ ⭐</p>
+            <p>Simplesmente maravilhoso! O xis salada do Vini é enorme, bem recheado e muito saboroso.</p>
+          </div>
+          <div className="border rounded p-3 mb-2">
+            <strong>Diego Candido</strong>
+            <p>⭐ ⭐ ⭐ ⭐</p>
+            <p>Gostei bastante, muito saboroso! Só achei que veio alface demais.</p>
+          </div>
+        </>
+      )
+    } else if (name.toLowerCase().includes("whopper")) {
+      return (
+        <>
+          <h4 className="mt-4">Comentários</h4>
+          <div className="border rounded p-3 mb-2">
+            <strong>Gabriel Souza</strong>
+            <p>⭐ ⭐ ⭐ ⭐</p>
+            <p>O Whopper é clássico, gosto muito do sabor defumado da carne.</p>
+          </div>
+          <div className="border rounded p-3 mb-2">
+            <strong>Diego Candido</strong>
+            <p>⭐ ⭐ ⭐ ⭐ ⭐</p>
+            <p>Meu lanche favorito! Sempre peço com queijo extra, nunca decepciona.</p>
+          </div>
+        </>
+      )
+    } else {
+      return <p className="mt-4">Não há comentários para este item.</p>
+    }
+  }
+
   if (loading) return <div className="container my-4">Carregando…</div>
   if (error) return (
     <div className="container my-4">
@@ -115,6 +153,9 @@ export default function FoodDetail() {
           </div>
 
           {desc && <p className="text-muted mb-0">{desc}</p>}
+
+          {/* Sessão de comentários */}
+          {renderComments()}
         </div>
       </div>
     </div>

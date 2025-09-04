@@ -17,13 +17,20 @@ function Header() {
   }
 
   return (
-    <header className="navbar navbar-expand-lg navbar-light bg-danger">
+    <header className="navbar navbar-expand-lg navbar-light bg-danger fixed-top shadow">
       <div className="container-fluid">
         <div className="d-flex w-100 align-items-center">
           {/* Logo */}
-          <h1 className="navbar-brand text-white">
-            <Link className="nav-link text-white mx-3" to="/"><img src='/golang-pet.png' style={{height: '40px', width: '40px'}}></img> DeliveryGo</Link>
-            </h1>
+          <h1 className="navbar-brand text-white m-0">
+            <Link className="nav-link text-white mx-3" to="/">
+              <img
+                src="/golang-pet.png"
+                alt="Logo"
+                style={{ height: '40px', width: '40px' }}
+              />{' '}
+              DeliveryGo
+            </Link>
+          </h1>
 
           {/* Links da esquerda */}
           <div className="d-flex">

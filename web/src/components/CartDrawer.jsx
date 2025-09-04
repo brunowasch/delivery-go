@@ -15,7 +15,7 @@ export default function CartDrawer(){
       <div className="panel">
         <div className="panel-head">
           <h5 className="mb-0"><i class="bi bi-cart"></i> Carrinho <span className="text-muted">({count})</span></h5>
-          <button className="btn btn-sm btn-outline-secondary" onClick={closeCart}>Fechar</button>
+          <button className="btn btn-sm btn-outline-secondary mt-4" onClick={closeCart}>Fechar</button>
         </div>
 
         <div className="panel-body">

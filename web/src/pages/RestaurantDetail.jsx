@@ -39,7 +39,7 @@ export default function RestaurantDetail() {
   }, [id])
 
   if (!id) return null
-  
+
   const rating = useMemo(() => {
     const n = Number(data?.rating)
     return Number.isFinite(n) ? n.toFixed(1) : null
@@ -94,7 +94,7 @@ export default function RestaurantDetail() {
 
           {desc && <p className="text-muted mb-4">{desc}</p>}
 
-          {/* Campos extras: só aparecem se existirem na API */}
+          { }
           <div className="row g-3">
             {data?.address && (
               <div className="col-12 col-md-6">

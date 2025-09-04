@@ -41,8 +41,6 @@ export default function RestaurantCard({ r }) {
           <div className="text-muted small">{category}</div>
         </div>
 
-        {/* coração */}
-        <button className="icon-heart" aria-label="Favoritar" type="button">♡</button>
       </div>
 
       {/* Link invisível que cobre todo o card */}

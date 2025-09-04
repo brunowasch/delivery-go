@@ -102,7 +102,7 @@ export default function UsersList() {
                   footer={
                     <Link
                       to={hasNumericId ? `/usuarios/${displayId}` : '/usuarios'}
-                      className="btn brand"
+                      className="btn brand btn-danger"
                     >
                       Ver detalhes
                     </Link>
