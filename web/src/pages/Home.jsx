@@ -1,65 +1,69 @@
-import { useEffect, useMemo, useState } from 'react'
-import { API } from '../services/api'
-import CategoryChips from '../components/CategoryChips'
-import Skeleton from '../components/Skeleton'
-import ErrorState from '../components/ErrorState'
-import EmptyState from '../components/EmptyState'
-import RestaurantCard from '../components/RestaurantCard'
+import { useEffect, useState } from 'react';
+import { API } from '../services/api';
+import Skeleton from '../components/Skeleton';
+import ErrorState from '../components/ErrorState';
+import EmptyState from '../components/EmptyState';
+import RestaurantCard from '../components/RestaurantCard';
+import FoodCard from '../components/FoodCard';
 
-export default function Home(){
-  const [restaurants, setRestaurants] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [category, setCategory] = useState('')
-
-  // Busca via querystring ?q=
-  const [q, setQ] = useState(new URLSearchParams(location.search).get('q') ?? '')
-  useEffect(() => {
-    const onPop = () => setQ(new URLSearchParams(location.search).get('q') ?? '')
-    window.addEventListener('popstate', onPop)
-    return () => window.removeEventListener('popstate', onPop)
-  }, [])
+export default function Home() {
+  const [restaurants, setRestaurants] = useState([]);
+  const [foods, setFoods] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    API.listRestaurants()
-      .then(setRestaurants)
+    Promise.all([API.listRestaurants(), API.listFoods()])
+      .then(([restRes, foodRes]) => {
+        setRestaurants(restRes);
+        setFoods(foodRes);
+      })
       .catch(e => setError(e.message))
-      .finally(()=>setLoading(false))
-  }, [])
-
-  const filtered = useMemo(() => {
-    let list = restaurants
-    if (q) {
-      const term = q.toLowerCase()
-      list = list.filter(r =>
-        (r.name||'').toLowerCase().includes(term) ||
-        (r.cuisine||'').toLowerCase().includes(term) ||
-        (r.city||'').toLowerCase().includes(term)
-      )
-    }
-    if (category) {
-      const cat = category.toLowerCase()
-      list = list.filter(r => (r.cuisine||'').toLowerCase().includes(cat))
-    }
-    return list
-  }, [restaurants, q, category])
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
-    <div className="container">
-      <div className="section-title">🍽️ Restaurantes</div>
-      <p className="section-sub">Descubra opções perto de você. Use a busca no topo para filtrar por nome, cozinha ou cidade.</p>
-
-      <CategoryChips value={category} onChange={setCategory} />
-
-      {loading && <div style={{marginTop:12}}><Skeleton rows={3}/></div>}
-      {!loading && error && <div style={{marginTop:12}}><ErrorState message={error}/></div>}
-      {!loading && !error && filtered.length === 0 && <div style={{marginTop:12}}><EmptyState title="Nenhum restaurante encontrado" subtitle="Tente remover filtros ou alterar a busca."/></div>}
-
-      {!loading && !error && filtered.length > 0 && (
-        <div className="grid" style={{marginTop:12}}>
-          {filtered.map(r => <RestaurantCard key={r.id} r={r}/>)}
+    <div className="container-fluid">
+      {/* Banner principal */}
+      <div className="banner-container">
+        <div className="banner-bg"></div>
+      </div>
+      <div className="container">
+        <div className="row">
+          {/* Os melhores restaurantes */}
+          <h2 className="mb-3">Os melhores restaurantes</h2>
+          {loading && <Skeleton rows={2} />}
+          {!loading && error && <ErrorState message={error} />}
+          {!loading && !error && restaurants.length === 0 && (
+            <EmptyState title="Nenhum restaurante encontrado" />
+          )}
+          {!loading && !error && restaurants.length > 0 && (
+            <div className="row">
+              {restaurants.map(r => (
+                <div className="col-md-3 col-sm-6 col-xs-12 mb-4" key={r.id}>
+                  <RestaurantCard r={r} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Comidas mais pedidas */}
+        <h2 className="mt-5 mb-3">Comidas mais pedidas</h2>
+        {loading && <Skeleton rows={2} />}
+        {!loading && !error && foods.length === 0 && (
+          <EmptyState title="Nenhuma comida encontrada" />
+        )}
+        {!loading && !error && foods.length > 0 && (
+          <div className="row">
+            {foods.map(f => (
+              <div className="col-md-4 col-sm-6 col-xs-12 mb-4" key={f.id}>
+                <FoodCard f={f} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
-  )
+  );
 }

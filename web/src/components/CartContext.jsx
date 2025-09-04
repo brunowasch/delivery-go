@@ -17,9 +17,7 @@ export function CartProvider({ children }) {
   const total = useMemo(() => items.reduce((s,i)=> s + i.price * i.qty, 0), [items])
 
   function addItem(product) {
-    // regra: carrinho de um restaurante por vez
     if (restaurantId && product.restaurantId && product.restaurantId !== restaurantId) {
-      // limpa carrinho se mudar restaurante (comportamento simples)
       setItems([])
     }
     if (product.restaurantId) setRestaurantId(product.restaurantId)
