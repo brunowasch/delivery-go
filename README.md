@@ -43,14 +43,18 @@ Lista das APIs consumidas neste trabalho:
 ``` bash
 # 1) Clone o repositório:
 git clone https://github.com/brunowasch/delivery-go.git
-# 2) Entre na pasta e acesse a pasta "web":
-cd delivery-go && cd web
-# 3) Instale as dependências:
+# 2) Acesse a pasta e instale as dependências:
+cd delivery-go && npm install
+# 3) Entre na pasta e acesse a pasta "web":
+cd web
+# 4) Instale as dependências:
 npm install
-# 4) Inicie:
+# 5) Inicie:
 npm run dev
+# 6) Depois que rodar, acesse:
+http://localhost:5173
 -
-# Se quiser acessar o back-end:
+# Se quiser acessar o back-end (Obrigatório ter Golang instalado em seu dispositivo):
 cd delivery-go && cd server
 # Inicie:
 go run main.go
