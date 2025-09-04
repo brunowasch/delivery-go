@@ -1,49 +1,63 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
-const CartCtx = createContext(null)
+const CartContext = createContext(null)
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState(() => {
-    const raw = localStorage.getItem('cart_v1')
-    return raw ? JSON.parse(raw) : []
+    try { return JSON.parse(localStorage.getItem('cart_items') || '[]') } catch { return [] }
   })
-  const [open, setOpen] = useState(false)
-  const [restaurantId, setRestaurantId] = useState(null)
+  const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
-    localStorage.setItem('cart_v1', JSON.stringify(items))
+    localStorage.setItem('cart_items', JSON.stringify(items))
   }, [items])
 
-  const total = useMemo(() => items.reduce((s,i)=> s + i.price * i.qty, 0), [items])
+  const openCart = () => setIsOpen(true)
+  const closeCart = () => setIsOpen(false)
+  const clear = () => setItems([])
 
-  function addItem(product) {
-    if (restaurantId && product.restaurantId && product.restaurantId !== restaurantId) {
-      setItems([])
-    }
-    if (product.restaurantId) setRestaurantId(product.restaurantId)
-
+  const addItem = (raw, qty = 1) => {
+    if (!raw) return
+    const id = String(raw.id ?? raw.fid ?? raw.name)
+    const price = Number(raw.price ?? 0)
+    const name = raw.name ?? 'Item'
+    const image = raw.image ?? null
     setItems(prev => {
-      const idx = prev.findIndex(p => p.id === product.id)
-      if (idx >= 0) {
-        const copy = [...prev]
-        copy[idx] = { ...copy[idx], qty: copy[idx].qty + 1 }
-        return copy
+      const ix = prev.findIndex(x => x.id === id)
+      if (ix >= 0) {
+        const cp = [...prev]
+        cp[ix] = { ...cp[ix], qty: cp[ix].qty + qty }
+        return cp
       }
-      return [...prev, { ...product, qty: 1 }]
+      return [...prev, { id, name, price, qty, image }]
     })
-    setOpen(true)
   }
 
-  function inc(id){ setItems(prev => prev.map(i => i.id===id? {...i, qty:i.qty+1} : i)) }
-  function dec(id){ setItems(prev => prev.flatMap(i => i.id===id? (i.qty>1? [{...i, qty:i.qty-1}] : []) : [i])) }
-  function remove(id){ setItems(prev => prev.filter(i => i.id!==id)) }
-  function clear(){ setItems([]); setRestaurantId(null) }
+  const inc = (id) =>
+    setItems(prev => prev.map(x => x.id === String(id) ? { ...x, qty: x.qty + 1 } : x))
+  const dec = (id) =>
+    setItems(prev => prev.map(x => x.id === String(id) ? { ...x, qty: Math.max(1, x.qty - 1) } : x))
+  const remove = (id) =>
+    setItems(prev => prev.filter(x => x.id !== String(id)))
+
+  const total = useMemo(() => items.reduce((s, x) => s + x.price * x.qty, 0), [items])
+  const count = useMemo(() => items.reduce((s, x) => s + x.qty, 0), [items])
 
   return (
-    <CartCtx.Provider value={{ items, total, open, setOpen, addItem, inc, dec, remove, clear, restaurantId }}>
+    <CartContext.Provider value={{ items, addItem, inc, dec, remove, clear, total, count, isOpen, openCart, closeCart }}>
       {children}
-    </CartCtx.Provider>
+    </CartContext.Provider>
   )
 }
 
-export function useCart(){ return useContext(CartCtx) }
+export function useCart() {
+  const ctx = useContext(CartContext)
+  if (!ctx) {
+    console.warn('useCart chamado fora de <CartProvider>.')
+    return {
+      items: [], addItem: () => {}, inc: () => {}, dec: () => {}, remove: () => {}, clear: () => {},
+      total: 0, count: 0, isOpen: false, openCart: () => {}, closeCart: () => {}
+    }
+  }
+  return ctx
+}

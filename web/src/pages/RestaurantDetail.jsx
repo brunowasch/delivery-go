@@ -1,213 +1,131 @@
-import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
 import { API } from '../services/api'
-import Card from '../components/Card'
-import Badge from '../components/Badge'
-import Skeleton from '../components/Skeleton'
-import ErrorState from '../components/ErrorState'
-import FoodCard from '../components/FoodCard'
-import { useCart } from '../components/CartContext.jsx'
 
-import {
-  UtensilsCrossed,
-  ScrollText,
-  MapPin,
-  Clock,
-  Bike,
-  Star,
-  StarHalf,
-  StarOff,
-  ChevronLeft
-} from 'lucide-react'
-
-const FALLBACK_POSTER = 'https://images.unsplash.com/photo-1528605105345-5344ea20e269?q=80&w=1600&auto=format&fit=crop'
-
-export default function RestaurantDetail(){
+export default function RestaurantDetail() {
   const { id } = useParams()
-  const [r, setR] = useState(null)
-  const [foods, setFoods] = useState([])
+  const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const { addItem } = useCart()
 
   useEffect(() => {
-    setLoading(true)
-    setError('')
-    Promise.all([
-      API.getRestaurant(id),
-      API.listFoods(),
-    ])
-      .then(([rest, listFoods]) => {
-        setR(rest)
-        setFoods(Array.isArray(listFoods) ? listFoods : [])
-      })
-      .catch(e => setError(e?.message || 'Erro ao carregar restaurante'))
-      .finally(()=>setLoading(false))
+    if (!id) return;
+    let cancel = false
+    async function load() {
+      setLoading(true)
+      setError('')
+
+      const getOne = typeof API.getRestaurant === 'function'
+        ? API.getRestaurant
+        : async (rid) => {
+            const list = await API.listRestaurants()
+            return list.find(x => String(x?.id) === String(rid)) || null
+          }
+
+      try {
+        const res = await getOne(id)
+        if (cancel) return
+        if (!res) throw new Error('Restaurante não encontrado')
+        setData(res)
+      } catch (e) {
+        if (cancel) return
+        setError(e?.message || 'Erro ao carregar restaurante')
+      } finally {
+        if (!cancel) setLoading(false)
+      }
+    }
+    load()
+    return () => { cancel = true }
   }, [id])
 
-  const menu = useMemo(() => {
-    const idNum = Number(id)
-    const byId = foods.filter(f => Number(f.restaurantId) === idNum)
-    if (byId.length > 0) return byId
+  if (!id) return null
+  
+  const rating = useMemo(() => {
+    const n = Number(data?.rating)
+    return Number.isFinite(n) ? n.toFixed(1) : null
+  }, [data])
 
-    if (r?.name) {
-      const name = String(r.name || '').toLowerCase()
-      const byName = foods.filter(f => String(f.restaurantName || '').toLowerCase() === name)
-      if (byName.length > 0) return byName
-    }
+  const img = data?.image || 'https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1200&auto=format&fit=crop'
+  const category = data?.cuisine || data?.category || null
+  const desc = data?.description || null
 
-    return foods.slice(0, 12) 
-  }, [foods, id, r])
-
-  const safeText = (v, fallback='—') => (v === null || v === undefined || v === '') ? fallback : String(v)
-  const isOpen = r?.isOpen ?? r?.open ?? true
-  const deliveryTime = r?.deliveryTime || '25–45 min'
-  const deliveryFee = r?.deliveryFee === 0 ? 'Grátis' : (r?.deliveryFee ? `R$ ${Number(r.deliveryFee).toFixed(2)}` : 'R$ 6,90')
-
-  const renderStars = (rating) => {
-    const n = Math.max(0, Math.min(5, Number(rating) || 0))
-    const full = Math.floor(n)
-    const half = n - full >= 0.5 ? 1 : 0
-    const empty = 5 - full - half
-    return (
-      <span className="d-inline-flex align-items-center gap-1" aria-label={`Nota ${n.toFixed(1)} de 5`}>
-        {Array.from({length: full}).map((_,i)=><Star key={`f${i}`} size={16} />)}
-        {Array.from({length: half}).map((_,i)=><StarHalf key={`h${i}`} size={16} />)}
-        {Array.from({length: empty}).map((_,i)=><StarOff key={`e${i}`} size={16} />)}
-        <span className="ms-1 small text-muted">{n.toFixed(1)}</span>
-      </span>
-    )
+  function handleImgError(e) {
+    e.currentTarget.src = 'https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1200&auto=format&fit=crop'
   }
 
-  if (loading) {
-    return (
-      <div className="container my-3">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <div className="section-title d-flex align-items-center gap-2">
-            <UtensilsCrossed size={20}/> Restaurante
-          </div>
-          <span className="btn ghost disabled"><ChevronLeft size={16}/> Voltar</span>
-        </div>
-        <Skeleton rows={3} />
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="container my-3">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <div className="section-title d-flex align-items-center gap-2">
-            <UtensilsCrossed size={20}/> Restaurante
-          </div>
-          <Link to="/restaurants" className="btn ghost"><ChevronLeft size={16}/> Voltar</Link>
-        </div>
-        <ErrorState message={error} />
-      </div>
-    )
-  }
-
-  if (!r) {
-    return (
-      <div className="container my-3">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <div className="section-title d-flex align-items-center gap-2">
-            <UtensilsCrossed size={20}/> Restaurante
-          </div>
-          <Link to="/restaurants" className="btn ghost"><ChevronLeft size={16}/> Voltar</Link>
-        </div>
-        <ErrorState message="Restaurante não encontrado." />
-      </div>
-    )
-  }
+  if (loading) return <div className="container my-4">Carregando…</div>
+  if (error) return (
+    <div className="container my-4">
+      <p className="text-danger mb-3">{error}</p>
+      <Link to="/restaurantes" className="btn btn-secondary">Voltar</Link>
+    </div>
+  )
+  if (!data) return (
+    <div className="container my-4">
+      <p className="mb-3">Restaurante não encontrado.</p>
+      <Link to="/restaurantes" className="btn btn-secondary">Voltar</Link>
+    </div>
+  )
 
   return (
-    <div className="container my-3">
-      {/* Cabeçalho / Voltar */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <div className="section-title d-flex align-items-center gap-2">
-          <UtensilsCrossed size={20}/> Restaurante #{id}
+    <div className="container my-4">
+      <Link to="/restaurantes" className="btn btn-light mb-3">← Voltar</Link>
+
+      {/* Card */}
+      <div className="card shadow-sm rounded-4 border-0 overflow-hidden restaurant-detail-card">
+        {}
+        <div className="p-3 p-md-4 pb-0">
+          <img
+            src={img}
+            onError={handleImgError}
+            alt={data.name || 'Restaurante'}
+            className="w-100 hero-img-in-card"
+          />
         </div>
-        <Link to="/restaurants" className="btn ghost">
-          <ChevronLeft size={16}/> Voltar
-        </Link>
-      </div>
 
-      {/* HERO */}
-      <div className="position-relative mb-3 rounded-3 overflow-hidden" style={{maxHeight: 260}}>
-        <img
-          src={r.image || r.cover || FALLBACK_POSTER}
-          alt={r.name}
-          className="w-100"
-          style={{objectFit:'cover', height: 260}}
-          onError={(e)=>{e.currentTarget.src = FALLBACK_POSTER}}
-        />
-      </div>
+        {/* Detalhes */}
+        <div className="card-body p-3 p-md-4">
+          <div className="d-flex align-items-center flex-wrap gap-2 mb-2">
+            <h1 className="h3 mb-0 me-2">{data.name}</h1>
+            {category && <span className="badge bg-light text-dark">{category}</span>}
+            {rating && <span className="badge bg-success-subtle text-success">⭐ {rating}</span>}
+            {data?.id && <span className="badge bg-light text-muted">ID #{data.id}</span>}
+          </div>
 
-      {/* CARD PRINCIPAL */}
-      <Card
-        title={
-          <div className="d-flex flex-wrap align-items-center gap-2">
-            <span className="fw-semibold">{safeText(r.name, 'Restaurante')}</span>
-            {isOpen ? (
-              <Badge tone="ok" dot>Aberto</Badge>
-            ) : (
-              <Badge tone="warn" dot>Fechado</Badge>
+          {desc && <p className="text-muted mb-4">{desc}</p>}
+
+          {/* Campos extras: só aparecem se existirem na API */}
+          <div className="row g-3">
+            {data?.address && (
+              <div className="col-12 col-md-6">
+                <div className="list-tile">
+                  <div className="list-tile-title">Endereço</div>
+                  <div className="text-muted">
+                    {[data.address?.street, data.address?.suite, data.address?.city]
+                      .filter(Boolean).join(', ') || '—'}
+                  </div>
+                </div>
+              </div>
+            )}
+            {data?.phone && (
+              <div className="col-12 col-md-6">
+                <div className="list-tile">
+                  <div className="list-tile-title">Contato</div>
+                  <div className="text-muted">{data.phone}</div>
+                </div>
+              </div>
+            )}
+            {data?.website && (
+              <div className="col-12 col-md-6">
+                <div className="list-tile">
+                  <div className="list-tile-title">Site</div>
+                  <a href={data.website} target="_blank" rel="noreferrer">{data.website}</a>
+                </div>
+              </div>
             )}
           </div>
-        }
-        subtitle={
-          <span className="d-inline-flex align-items-center gap-2 text-muted">
-            <MapPin size={16}/> {safeText(r.address, `${safeText(r.city)} ${safeText(r.state, '')}`)}
-          </span>
-        }
-        right={renderStars(r.rating)}
-      >
-        <div className="d-flex flex-wrap gap-2">
-          <span className="chip d-inline-flex align-items-center gap-2">
-            <UtensilsCrossed size={14}/> {safeText(r.cuisine)}
-          </span>
-          <span className="chip d-inline-flex align-items-center gap-2">
-            <Clock size={14}/> {deliveryTime}
-          </span>
-          <span className="chip d-inline-flex align-items-center gap-2">
-            <Bike size={14}/> Entrega: {deliveryFee}
-          </span>
         </div>
-      </Card>
-
-      <div style={{height:12}}/>
-
-      {/* CARDÁPIO */}
-      <div className="section-title d-flex align-items-center gap-2">
-        <ScrollText size={18}/> Cardápio
       </div>
-
-      {menu.length === 0 ? (
-        <ErrorState message="Este restaurante ainda não possui itens no cardápio." />
-      ) : (
-        <div className="grid" style={{'--min':'280px'}}>
-          {menu.map(f => (
-            <FoodCard
-              key={f.id}
-              f={f}
-              onAdd={()=> addItem({
-                id: f.id,
-                name: f.name,
-                price: Number(f.price ?? 0),
-                restaurantId: Number(id),
-              })}
-            />
-          ))}
-        </div>
-      )}
-
-      <div style={{height:12}}/>
-
-      {/* JSON DEBUG */}
-      <Card title="JSON do restaurante (debug)">
-        <pre className="pretty">{JSON.stringify(r, null, 2)}</pre>
-      </Card>
     </div>
   )
 }

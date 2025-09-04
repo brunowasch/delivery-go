@@ -29,7 +29,12 @@ export const API = {
       throw new Error(error.message);
     }
   },
-
+  async getRestaurant(id) {
+    const res = await fetch(`${API_URL}/restaurants/${id}`)
+    if (!res.ok) throw new Error('Erro ao buscar restaurante')
+    return await res.json()
+  },
+  
   listFoods: async () => {
     try {
       const response = await fetch(`${API_URL}/foods`);

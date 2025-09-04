@@ -1,22 +1,17 @@
+import { Link } from 'react-router-dom'
+import { useCart } from './CartContext'
 import Badge from './Badge'
 
-const PHOTOS = [
-  'https://images.unsplash.com/photo-1606756790138-261d2b21cd75?q=80&w=800&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=800&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?q=80&w=800&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1526318472351-c75fcf070305?q=80&w=800&auto=format&fit=crop',
-]
+const SAFE_FALLBACK = 'https://images.unsplash.com/photo-1601924582971-c6f9fadd6f59?q=80&w=1200&auto=format&fit=crop'
 
-const FOOD_IMAGES = {
-  'Whopper': 'https://www.burgerking.com.br/_next/image?url=%2Fuploads%2Fproduct%2F2023%2F12%2F07%2Fwhopper.png&w=640&q=75',
-  'Combo Whopper': 'https://www.burgerking.com.br/_next/image?url=%2Fuploads%2Fproduct%2F2023%2F12%2F07%2Fwhopper.png&w=640&q=75',
-  'Pizza': 'https://images.unsplash.com/photo-1601924582971-c6f9fadd6f59?q=80&w=800&auto=format&fit=crop',
-  'Sushi': 'https://images.unsplash.com/photo-1544378730-8b5104c60c2d?q=80&w=800&auto=format&fit=crop',
-}
+const PHOTOS = []
+const FOOD_IMAGES = {}
 
 export default function FoodCard({ f, onAdd }) {
-  const index = isNaN(Number(f?.id)) ? 0 : Number(f.id) % PHOTOS.length
-  const fallback = PHOTOS[index]
+  const cart = useCart()
+
+  const index = isNaN(Number(f?.id)) ? 0 : Number(f.id) % Math.max(1, PHOTOS.length || 1)
+  const fallback = PHOTOS.length ? PHOTOS[index] : SAFE_FALLBACK
   const mapped = f?.name ? FOOD_IMAGES[f.name] : null
   const img = f?.image || mapped || fallback
 
@@ -24,12 +19,16 @@ export default function FoodCard({ f, onAdd }) {
   const available = f?.available ?? true
   const price = Number(f?.price ?? 0)
 
-  function handleImgError(e) {
-    e.currentTarget.src = fallback
+  function handleImgError(e) { e.currentTarget.src = SAFE_FALLBACK }
+
+  function handleAdd() {
+    if (onAdd) return onAdd(f)
+    cart.addItem({ id: f?.id, name: f?.name, price, image: img })
+    cart.openCart()
   }
 
   return (
-    <div className="card h-100 shadow-sm">
+    <div className="card h-100 shadow-sm position-relative">
       <img
         src={img}
         alt={f?.name || 'Comida'}
@@ -40,9 +39,7 @@ export default function FoodCard({ f, onAdd }) {
 
       <div className="card-body d-flex flex-column">
         <h5 className="card-title mb-1">{f?.name}</h5>
-        <p className="card-text text-muted mb-2" style={{ minHeight: 40 }}>
-          {desc}
-        </p>
+        <p className="card-text text-muted mb-2" style={{ minHeight: 40 }}>{desc}</p>
 
         <div className="d-flex align-items-center gap-2 mb-3">
           <strong className="fs-6">R$ {price.toFixed(2)}</strong>
@@ -53,14 +50,24 @@ export default function FoodCard({ f, onAdd }) {
 
         <div className="mt-auto d-flex justify-content-end">
           <button
-            className="btn btn-danger"
+            className="btn btn-danger position-relative"
+            style={{ zIndex: 2 }} 
             disabled={!available}
-            onClick={() => onAdd?.(f)}
+            onClick={handleAdd}
           >
             Adicionar
           </button>
         </div>
       </div>
+
+      {}
+      {f?.id != null && (
+        <Link
+          to={`/comidas/${f.id}`}
+          className="stretched-link"
+          aria-label={`Ver detalhes de ${f?.name || 'comida'}`}
+        />
+      )}
     </div>
   )
 }

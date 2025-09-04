@@ -27,6 +27,7 @@ function Header() {
 
           {/* Links da esquerda */}
           <div className="d-flex">
+            <Link className="nav-link text-white mx-3 nav-underline" to="/">Início</Link>
             <Link className="nav-link text-white mx-3 nav-underline" to="/restaurantes">Restaurantes</Link>
             <Link className="nav-link text-white mx-3 nav-underline" to="/comidas">Comidas</Link>
             <Link className="nav-link text-white mx-3 nav-underline" to="/usuarios">Meus amigos</Link>
