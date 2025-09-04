@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { API } from '../services/api'
 import Card from '../components/Card'
@@ -11,6 +11,10 @@ export default function UsersList() {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [q, setQ] = useState(() => {
+    const usp = new URLSearchParams(window.location.search)
+    return usp.get('q') ?? ''
+  })
 
   useEffect(() => {
     API.listUsers()
@@ -19,6 +23,31 @@ export default function UsersList() {
       .catch(e => setError(e?.message || 'Erro ao carregar usuários'))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    const onPop = () => {
+      const usp = new URLSearchParams(window.location.search)
+      setQ(usp.get('q') ?? '')
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+
+  function onSearch(e) {
+    e.preventDefault()
+    const usp = new URLSearchParams(window.location.search)
+    if (q) usp.set('q', q)
+    else usp.delete('q')
+    history.replaceState(null, '', `?${usp.toString()}`)
+  }
+
+  function clearSearch() {
+    setQ('')
+    const usp = new URLSearchParams(window.location.search)
+    usp.delete('q')
+    history.replaceState(null, '', `?${usp.toString()}`)
+    window.dispatchEvent(new Event('popstate'))
+  }
 
   const getInitials = (name='') =>
     name.split(' ').filter(Boolean).slice(0,2).map(p => p[0]?.toUpperCase()).join('') || 'US'
@@ -45,11 +74,53 @@ export default function UsersList() {
 
   const renderStars = (n) => '⭐'.repeat(n) + '☆'.repeat(5 - n)
 
+  const filtered = useMemo(() => {
+    const term = q.trim().toLowerCase()
+    if (!term) return data
+    return data.filter((u) => {
+      const name = (u?.name ?? 'Usuário').toString().toLowerCase()
+      const email = (u?.email ?? '').toString().toLowerCase()
+      const id = (u?.id ?? '').toString().toLowerCase()
+      return name.includes(term) || email.includes(term) || id.includes(term)
+    })
+  }, [data, q])
+
   return (
     <div className="container my-4">
       <div className="section-title">Amigos adicionados</div>
-      <div className="section-sub mb-3">Atividades recentes de seus amigos</div>
 
+      {/* Pesquisa */}
+      <form
+        className="mb-4 d-flex justify-content-center"
+        onSubmit={onSearch}
+        role="search"
+        aria-label="Pesquisar usuários"
+        style={{ maxWidth: '500px', margin: '0 auto' }}
+      >
+        <div className="input-group input-group-sm">
+          <input
+            className="form-control form-control-sm"
+            placeholder="Buscar usuários..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          {q && (
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={clearSearch}
+              aria-label="Limpar busca"
+              title="Limpar"
+            >
+              <i className="bi bi-x-circle"></i>
+            </button>
+          )}
+          <button className="btn btn-danger" type="submit" aria-label="Pesquisar">
+            <i className="bi bi-search"></i>
+          </button>
+        </div>
+      </form>
+      <div className="section-sub mb-3">Atividades recentes de seus amigos</div>
       {loading && <Skeleton rows={3} />}
 
       {!loading && error && (
@@ -59,20 +130,22 @@ export default function UsersList() {
         />
       )}
 
-      {!loading && !error && data.length === 0 && (
-        <EmptyState title="Sem usuários" subtitle="A API não retornou dados." />
+      {!loading && !error && filtered.length === 0 && (
+        <EmptyState
+          title="Nenhum usuário encontrado"
+          subtitle={q ? `Sem resultados para “${q}”.` : 'Tente ajustar sua busca.'}
+        />
       )}
 
-      {!loading && !error && data.length > 0 && (
+      {!loading && !error && filtered.length > 0 && (
         <div className="row g-4">
-          {data.map((u, i) => {
+          {filtered.map((u, i) => {
             const rawId = u?.id
             const hasNumericId = Number.isFinite(Number(rawId))
             const displayId = hasNumericId ? Number(rawId) : null
 
             const name = (u?.name ?? 'Usuário').toString()
             const email = (u?.email ?? '').toString() || '—'
-
             const seed = hasNumericId ? displayId : `${name}:${email}`
 
             const key =

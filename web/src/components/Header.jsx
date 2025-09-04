@@ -1,4 +1,5 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import logo from '../assets/logo.png';
@@ -17,31 +18,52 @@ function Header() {
     window.dispatchEvent(new Event('popstate'));
   }
 
+  const collapseId = 'navbarSupportedContent';
+
   return (
     <header className="navbar navbar-expand-lg navbar-light bg-danger fixed-top shadow">
       <div className="container-fluid">
-        <div className="d-flex w-100 align-items-center">
-          {/* Logo */}
-          <h1 className="navbar-brand text-white m-0">
-            <Link className="nav-link text-white mx-3" to="/">
-              <img src={logo} alt="Logo DeliveryGo" style={{ height: "40px", marginRight: "8px" }} />
-              DeliveryGo
-            </Link>
-          </h1>
 
-          {/* Links da esquerda */}
-          <div className="d-flex">
-            <Link className="nav-link text-white mx-3 nav-underline" to="/">Início</Link>
-            <Link className="nav-link text-white mx-3 nav-underline" to="/restaurantes">Restaurantes</Link>
-            <Link className="nav-link text-white mx-3 nav-underline" to="/comidas">Comidas</Link>
-            <Link className="nav-link text-white mx-3 nav-underline" to="/usuarios">Meus amigos</Link>
-          </div>
+        {/* Brand / Logo */}
+        <Link to="/" className="navbar-brand d-flex align-items-center text-white text-decoration-none">
+          <img
+            src={logo}
+            alt="Logo DeliveryGo"
+            style={{ height: 40, marginRight: 8 }}
+          />
+          <span className="fw-semibold">DeliveryGo</span>
+        </Link>
 
-          {/* Links da direita */}
-          <div className="d-flex ms-auto">
-            <Link className="nav-link text-white mx-3 nav-underline" to="/criar-conta">Criar Conta</Link>
-            <Link className="nav-link text-white mx-3 nav-underline" to="/entrar">Entrar</Link>
-          </div>
+        {/* Toggler para mobile */}
+        <button
+          className="navbar-toggler border-0"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target={`#${collapseId}`}
+          aria-controls={collapseId}
+          aria-expanded="false"
+          aria-label="Alternar navegação"
+        >
+          <span className="navbar-toggler-icon" />
+        </button>
+
+        {/* Área colapsável */}
+        <div className="collapse navbar-collapse" id={collapseId}>
+          {/* Navegação */}
+          <ul className="navbar-nav gap-3 mb-2 mb-lg-0">
+            <li className="nav-item">
+              <Link className="nav-link text-white nav-underline" to="/">Início</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link text-white nav-underline" to="/restaurantes">Restaurantes</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link text-white nav-underline" to="/comidas">Comidas</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link text-white nav-underline" to="/usuarios">Meus amigos</Link>
+            </li>
+          </ul>
         </div>
       </div>
     </header>

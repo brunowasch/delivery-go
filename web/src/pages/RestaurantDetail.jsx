@@ -94,7 +94,7 @@ export default function RestaurantDetail() {
 
           {desc && <p className="text-muted mb-4">{desc}</p>}
 
-          { }
+          {}
           <div className="row g-3">
             {data?.address && (
               <div className="col-12 col-md-6">
